@@ -5,22 +5,14 @@ import (
 	"errors"
 	"github.com/mj37yhyy/gowb/pkg/utils"
 	"github.com/mj37yhyy/gowb/pkg/web"
-	"github.com/mj37yhyy/gowb/pkg/web/model"
 	"os"
 	"runtime"
 )
 
-type HandlerFunc func(context.Context) (model.Response, error)
-type Router struct {
-	Path    string
-	Method  string
-	Handler HandlerFunc
-}
-
 type Gowb struct {
 	ConfigName string
 	ConfigType string
-	Routers    []Router
+	Routers    []web.Router
 }
 
 func init() {

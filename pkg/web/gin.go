@@ -4,9 +4,9 @@ import (
 	"context"
 	"fmt"
 	"github.com/gin-gonic/gin"
-	"github.com/mj37yhyy/gowb"
 	"github.com/mj37yhyy/gowb/pkg/utils"
 	"github.com/mj37yhyy/gowb/pkg/web/middleware"
+	"github.com/mj37yhyy/gowb/pkg/web/model"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -16,6 +16,13 @@ import (
 	"time"
 )
 
+type HandlerFunc func(context.Context) (model.Response, error)
+type Router struct {
+	Path    string
+	Method  string
+	Handler HandlerFunc
+}
+
 func Bootstrap(ctx context.Context) {
 	server := start(ctx)
 	_signal()
@@ -24,11 +31,11 @@ func Bootstrap(ctx context.Context) {
 
 func start(c context.Context) *http.Server {
 	conf := c.Value(ConfigKey).(*utils.Config)
-	routers := c.Value(RoutersKey).([]gowb.Router)
+	routers := c.Value(RoutersKey).([]Router)
 
 	gin.SetMode(conf.Get("web.runMode").(string))
 
-	routersInit := Router(c, routers)
+	routersInit := doRouter(c, routers)
 	readTimeout := time.Minute
 	writeTimeout := time.Minute
 	endPoint := fmt.Sprintf(":%d", conf.Get("web.port"))
@@ -77,7 +84,7 @@ func _timeout(ctx context.Context, server *http.Server) {
 	log.Println("Server exiting")
 }
 
-func Router(c context.Context, routers []gowb.Router) *gin.Engine {
+func doRouter(c context.Context, routers []Router) *gin.Engine {
 	return router(initGin(c), routers)
 }
 
@@ -96,7 +103,7 @@ func initGin(c context.Context) (r *gin.Engine) {
 	return r
 }
 
-func router(r *gin.Engine, routers []gowb.Router) *gin.Engine {
+func router(r *gin.Engine, routers []Router) *gin.Engine {
 	// 404 Handler.
 	r.NoRoute(func(c *gin.Context) {
 		c.String(http.StatusNotFound, "The incorrect API route.")
