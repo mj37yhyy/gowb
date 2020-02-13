@@ -1,0 +1,24 @@
+log:
+  level: debug
+  formatter: json
+  printMethod: true
+  fields:
+    - name: a
+      value: 123456
+    - name: b
+      ref: http.request.header.bbb
+    - name: c
+      ref: http.request.querystring.ccc
+web:
+  port: 8080
+  runMode: release
+trace:
+  fields:
+    - http.request.header.x-request-id
+    - http.request.header.x-b3-traceid
+    - http.request.header.x-b3-spanid
+    - http.request.header.x-b3-parentspanid
+    - http.request.header.x-b3-sampled
+    - http.request.header.x-b3-flags
+    - http.request.header.x-ot-span-context
+orm: {}
