@@ -4,8 +4,8 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"github.com/mj37yhyy/gowb/pkg/constant"
 	"github.com/mj37yhyy/gowb/pkg/utils"
-	"github.com/mj37yhyy/gowb/pkg/web"
 	"github.com/mj37yhyy/gowb/pkg/web/model"
 	logger "github.com/sirupsen/logrus"
 	"github.com/xiaolin8/lager"
@@ -106,9 +106,9 @@ type Log struct {
 func Logger() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		// 获取上下文
-		c := ctx.Value(web.ContextKey).(context.Context)
+		c := ctx.Value(constant.ContextKey).(context.Context)
 		// 获取配置
-		conf := c.Value(web.ConfigKey).(*utils.Config)
+		conf := c.Value(constant.ConfigKey).(*utils.Config)
 
 		// 解析并处理yaml
 		var _log = Log{}
@@ -152,8 +152,8 @@ func Logger() gin.HandlerFunc {
 			contextLogger := logger.WithFields(fieldMap)
 
 			// 将logger对象插入上下文
-			c = context.WithValue(c, web.LoggerKey, contextLogger)
-			ctx.Set(web.ContextKey, c)
+			c = context.WithValue(c, constant.LoggerKey, contextLogger)
+			ctx.Set(constant.ContextKey, c)
 		} else {
 			panic(err)
 		}

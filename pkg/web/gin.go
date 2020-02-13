@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/gin-gonic/gin"
+	"github.com/mj37yhyy/gowb/pkg/constant"
 	"github.com/mj37yhyy/gowb/pkg/utils"
 	"github.com/mj37yhyy/gowb/pkg/web/middleware"
 	"github.com/mj37yhyy/gowb/pkg/web/model"
@@ -30,8 +31,8 @@ func Bootstrap(ctx context.Context) {
 }
 
 func start(c context.Context) *http.Server {
-	conf := c.Value(ConfigKey).(*utils.Config)
-	routers := c.Value(RoutersKey).([]Router)
+	conf := c.Value(constant.ConfigKey).(*utils.Config)
+	routers := c.Value(constant.RoutersKey).([]Router)
 
 	gin.SetMode(conf.Get("web.runMode").(string))
 
@@ -96,7 +97,7 @@ func initGin(c context.Context) (r *gin.Engine) {
 	r.Use(middleware.NoCache)
 	r.Use(middleware.Options)
 	r.Use(func(ctx *gin.Context) {
-		ctx.Set(ContextKey, c)
+		ctx.Set(constant.ContextKey, c)
 	})
 	r.Use(middleware.RequestLogging())
 	r.Use(middleware.Logger())
@@ -131,7 +132,7 @@ func router(r *gin.Engine, routers []Router) *gin.Engine {
 }
 
 func getHeader(ctx *gin.Context) {
-	context.WithValue(getContext(ctx), HeaderKey, ctx.Request.Header)
+	context.WithValue(getContext(ctx), constant.HeaderKey, ctx.Request.Header)
 }
 
 func getParams(ctx *gin.Context) {
@@ -139,15 +140,15 @@ func getParams(ctx *gin.Context) {
 	for _, param := range ctx.Params {
 		params[param.Key] = param.Value
 	}
-	context.WithValue(getContext(ctx), ParamsKey, params)
+	context.WithValue(getContext(ctx), constant.ParamsKey, params)
 	return
 }
 
 func getBody(ctx *gin.Context) {
 	body, _ := ioutil.ReadAll(ctx.Request.Body)
-	context.WithValue(getContext(ctx), BodyKey, body)
+	context.WithValue(getContext(ctx), constant.BodyKey, body)
 }
 
 func getContext(ctx *gin.Context) context.Context {
-	return ctx.Value(ContextKey).(context.Context)
+	return ctx.Value(constant.ContextKey).(context.Context)
 }

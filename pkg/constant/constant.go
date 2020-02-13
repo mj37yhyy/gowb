@@ -1,4 +1,4 @@
-package web
+package constant
 
 const (
 	// http-header请求参数名
