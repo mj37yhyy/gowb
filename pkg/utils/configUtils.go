@@ -5,14 +5,11 @@ import (
 	"os"
 )
 
-type ConfigUtils struct {
-}
-
 type Config struct {
 	viper *viper.Viper
 }
 
-func (c *ConfigUtils) New(configName string, configType string) (*Config, error) {
+func NewConfig(configName string, configType string) (*Config, error) {
 	//获取项目的执行路径
 	path, err := os.Getwd()
 	if err != nil {

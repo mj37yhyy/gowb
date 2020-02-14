@@ -3,11 +3,13 @@ package web
 import (
 	"context"
 	"fmt"
+	"github.com/chenjiandongx/ginprom"
 	"github.com/gin-gonic/gin"
+	"github.com/mj37yhyy/gowb/pkg/config"
 	"github.com/mj37yhyy/gowb/pkg/constant"
 	"github.com/mj37yhyy/gowb/pkg/model"
-	"github.com/mj37yhyy/gowb/pkg/utils"
 	"github.com/mj37yhyy/gowb/pkg/web/middleware"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -31,15 +33,15 @@ func Bootstrap(ctx context.Context) {
 }
 
 func start(c context.Context) *http.Server {
-	conf := c.Value(constant.ConfigKey).(*utils.Config)
+	conf := c.Value(constant.ConfigKey).(config.Config)
 	routers := c.Value(constant.RoutersKey).([]Router)
 
-	gin.SetMode(conf.Get("web.runMode").(string))
+	gin.SetMode(conf.Web.RunMode)
 
 	routersInit := doRouter(c, routers)
 	readTimeout := time.Minute
 	writeTimeout := time.Minute
-	endPoint := fmt.Sprintf(":%d", conf.Get("web.port"))
+	endPoint := fmt.Sprintf(":%d", conf.Web.Port)
 	maxHeaderBytes := 1 << 20
 
 	server := &http.Server{
@@ -98,9 +100,11 @@ func initGin(c context.Context) (r *gin.Engine) {
 	r.Use(middleware.Options)
 	r.Use(func(ctx *gin.Context) {
 		ctx.Set(constant.ContextKey, c)
+		ctx.Next()
 	})
-	r.Use(middleware.RequestLogging())
+	//r.Use(middleware.RequestLogging())
 	r.Use(middleware.Logger())
+	r.Use(ginprom.PromMiddleware(nil))
 	return r
 }
 
@@ -113,6 +117,9 @@ func router(r *gin.Engine, routers []Router) *gin.Engine {
 	r.GET("/health", func(c *gin.Context) {
 		c.String(http.StatusOK, fmt.Sprintf(time.Now().String()))
 	})
+
+	r.GET("/metrics", ginprom.PromHandler(promhttp.Handler()))
+
 	for _, router := range routers {
 		r.Handle(router.Method, router.Path, func(ctx *gin.Context) {
 			getBody(ctx)
@@ -132,23 +139,45 @@ func router(r *gin.Engine, routers []Router) *gin.Engine {
 }
 
 func getHeader(ctx *gin.Context) {
-	context.WithValue(getContext(ctx), constant.HeaderKey, ctx.Request.Header)
+	//var head = ctx.Request.Header
+	//fmt.Println(head)
+	setContext(ctx, context.WithValue(getContext(ctx), constant.HeaderKey, ctx.Request.Header))
 }
 
 func getParams(ctx *gin.Context) {
-	var params = make(map[string]string)
+	request := ctx.Request
+	var params = make(map[string][]string)
+
+	// url 参数
 	for _, param := range ctx.Params {
-		params[param.Key] = param.Value
+		params[param.Key] = []string{param.Value}
 	}
-	context.WithValue(getContext(ctx), constant.ParamsKey, params)
+
+	// querystring
+	for key, val := range request.URL.Query() {
+		params[key] = val
+	}
+
+	// form data
+	for key, val := range request.PostForm {
+		params[key] = val
+	}
+
+	fmt.Println(params)
+	setContext(ctx, context.WithValue(getContext(ctx), constant.ParamsKey, params))
 	return
 }
 
 func getBody(ctx *gin.Context) {
 	body, _ := ioutil.ReadAll(ctx.Request.Body)
-	context.WithValue(getContext(ctx), constant.BodyKey, body)
+	fmt.Println(body)
+	setContext(ctx, context.WithValue(getContext(ctx), constant.BodyKey, body))
 }
 
 func getContext(ctx *gin.Context) context.Context {
 	return ctx.Value(constant.ContextKey).(context.Context)
+}
+
+func setContext(ctx *gin.Context, c context.Context) {
+	ctx.Set(constant.ContextKey, c)
 }

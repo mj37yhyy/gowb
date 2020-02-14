@@ -4,13 +4,12 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"github.com/mj37yhyy/gowb/pkg/config"
 	"github.com/mj37yhyy/gowb/pkg/constant"
 	"github.com/mj37yhyy/gowb/pkg/model"
-	"github.com/mj37yhyy/gowb/pkg/utils"
 	logger "github.com/sirupsen/logrus"
 	"github.com/xiaolin8/lager"
 	"io/ioutil"
-	"os"
 	"regexp"
 	"strings"
 	"time"
@@ -90,72 +89,35 @@ func RequestLogging() gin.HandlerFunc {
 	}
 }
 
-type Fields struct {
-	name  string
-	value string
-	ref   string
-}
-
-type Log struct {
-	level       string
-	formatter   string
-	printMethod bool
-	fields      []Fields
-}
-
 func Logger() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		// 获取上下文
 		c := ctx.Value(constant.ContextKey).(context.Context)
 		// 获取配置
-		conf := c.Value(constant.ConfigKey).(*utils.Config)
+		conf := c.Value(constant.ConfigKey).(config.Config)
 
-		// 解析并处理yaml
-		var _log = Log{}
-		if err := conf.Unmarshal(&_log); err != nil {
-			// 日志json格式
-			if _log.formatter == "json" {
-				// Log as JSON instead of the default ASCII formatter.
-				logger.SetFormatter(&logger.JSONFormatter{})
-			}
-
-			// Output to stdout instead of the default stderr
-			// Can be any io.Writer, see below for File example
-			logger.SetOutput(os.Stdout)
-
-			// 日志级别
-			// Only log the warning severity or above.
-			level, err := logger.ParseLevel(_log.level)
-			if err != nil {
-				panic(err)
-			}
-			logger.SetLevel(level)
-
-			// 打印函数与文件
-			logger.SetReportCaller(_log.printMethod)
-
-			// 处理自定义字段
-			fieldMap := make(map[string]interface{})
-			for _, field := range _log.fields {
-				if field.ref == "" {
-					fieldMap[field.name] = field.value
-				} else {
-					arr := strings.Split(field.ref, ".")
-					htype := arr[2]
-					if htype == "header" {
-						fieldMap[field.name] = ctx.Request.Header.Get(arr[3])
-					} else if htype == "querystring" {
-						fieldMap[field.name] = ctx.Param(arr[3])
-					}
+		// 处理自定义字段
+		fieldMap := make(map[string]interface{})
+		for _, field := range conf.Log.Fields {
+			if field.Ref == "" {
+				fieldMap[field.Name] = field.Value
+			} else {
+				arr := strings.Split(field.Ref, ".")
+				htype := arr[2]
+				if htype == "header" {
+					fieldMap[field.Name] = ctx.Request.Header.Get(arr[3])
+				} else if htype == "querystring" {
+					fieldMap[field.Name] = ctx.Query(arr[3])
 				}
 			}
-			contextLogger := logger.WithFields(fieldMap)
-
-			// 将logger对象插入上下文
-			c = context.WithValue(c, constant.LoggerKey, contextLogger)
-			ctx.Set(constant.ContextKey, c)
-		} else {
-			panic(err)
 		}
+		contextLogger := logger.WithFields(fieldMap)
+
+		// 将logger对象插入上下文
+		c = context.WithValue(c, constant.LoggerKey, contextLogger)
+		ctx.Set(constant.ContextKey, c)
+		// Continue.
+		ctx.Next()
+
 	}
 }
