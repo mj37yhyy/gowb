@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/mj37yhyy/gowb/pkg/config"
+	"github.com/mj37yhyy/gowb/pkg/db"
 	gowbLog "github.com/mj37yhyy/gowb/pkg/log"
 	"github.com/mj37yhyy/gowb/pkg/utils"
 	"github.com/mj37yhyy/gowb/pkg/web"
@@ -22,9 +23,10 @@ const logo = `
 `
 
 type Gowb struct {
-	ConfigName string
-	ConfigType string
-	Routers    []web.Router
+	ConfigName       string
+	ConfigType       string
+	Routers          []web.Router
+	AutoCreateTables []interface{}
 }
 
 func Bootstrap(g Gowb) (err error) {
@@ -45,11 +47,36 @@ func Bootstrap(g Gowb) (err error) {
 		} else {
 			c := context.WithValue(context.Background(), "routers", g.Routers)
 			c = context.WithValue(c, "config", _config)
-			gowbLog.InitLogger(c)
+
+			//初始化mysql
+			err := initMysql(c, g)
+			if err != nil {
+				return err
+			}
+
+			//初始化日志
+			err = gowbLog.InitLogger(c)
+			if err != nil {
+				return err
+			}
+
+			//初始化gin
 			web.Bootstrap(c)
 		}
 	} else {
 		return errors.New("ConfigName and ConfigType is empty!")
+	}
+	return nil
+}
+
+func initMysql(c context.Context, g Gowb) error {
+	err := db.InitMysql(c)
+	if err != nil {
+		return err
+	}
+	//建表
+	for _, t := range g.AutoCreateTables {
+		db.DB.AutoMigrate(t)
 	}
 	return nil
 }

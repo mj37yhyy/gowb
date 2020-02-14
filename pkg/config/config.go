@@ -1,9 +1,12 @@
 package config
 
+import "time"
+
 type Config struct {
 	Log   Log   `mapstructure:"log"`
 	Web   Web   `mapstructure:"web"`
 	Trace Trace `mapstructure:"trace"`
+	Mysql Mysql `mapstructure:"mysql"`
 }
 
 type Fields struct {
@@ -26,4 +29,16 @@ type Web struct {
 
 type Trace struct {
 	Fields []string `mapstructure:"fields"`
+}
+
+type Mysql struct {
+	UserName        string        `mapstructure:"userName"`
+	Password        string        `mapstructure:"password"`
+	Host            string        `mapstructure:"host"`
+	Port            string        `mapstructure:"port"`
+	Database        string        `mapstructure:"database"`
+	Params          string        `mapstructure:"params"`
+	MaxOpenConns    int           `mapstructure:"maxOpenConns"`
+	MaxIdleConns    int           `mapstructure:"maxIdleConns"`
+	ConnMaxLifetime time.Duration `mapstructure:"connMaxLifetime"`
 }
