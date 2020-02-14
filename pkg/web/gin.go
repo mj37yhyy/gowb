@@ -105,6 +105,7 @@ func initGin(c context.Context) (r *gin.Engine) {
 	//r.Use(middleware.RequestLogging())
 	r.Use(middleware.Logger())
 	r.Use(ginprom.PromMiddleware(nil))
+	r.Use(middleware.Tracing())
 	return r
 }
 
@@ -163,14 +164,14 @@ func getParams(ctx *gin.Context) {
 		params[key] = val
 	}
 
-	fmt.Println(params)
+	//fmt.Println(params)
 	setContext(ctx, context.WithValue(getContext(ctx), constant.ParamsKey, params))
 	return
 }
 
 func getBody(ctx *gin.Context) {
 	body, _ := ioutil.ReadAll(ctx.Request.Body)
-	fmt.Println(body)
+	//fmt.Println(body)
 	setContext(ctx, context.WithValue(getContext(ctx), constant.BodyKey, body))
 }
 

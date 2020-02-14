@@ -15,6 +15,7 @@ const (
 	RoutersKey = "routers"
 	ContextKey = "context"
 	LoggerKey  = "logger"
+	TraceKey   = "trace"
 
 	BodyKey   = "body"
 	HeaderKey = "header"

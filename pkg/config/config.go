@@ -1,8 +1,9 @@
 package config
 
 type Config struct {
-	Log Log `mapstructure:"log"`
-	Web Web `mapstructure:"web"`
+	Log   Log   `mapstructure:"log"`
+	Web   Web   `mapstructure:"web"`
+	Trace Trace `mapstructure:"trace"`
 }
 
 type Fields struct {
@@ -21,4 +22,8 @@ type Log struct {
 type Web struct {
 	Port    int    `mapstructure:"port"`
 	RunMode string `mapstructure:"runMode"`
+}
+
+type Trace struct {
+	Fields []string `mapstructure:"fields"`
 }
