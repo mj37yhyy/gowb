@@ -126,6 +126,7 @@ func router(r *gin.Engine, routers []Router) *gin.Engine {
 			getBody(ctx)
 			getParams(ctx)
 			getHeader(ctx)
+			addRequest(ctx)
 
 			resp, err := router.Handler(getContext(ctx))
 
@@ -137,6 +138,10 @@ func router(r *gin.Engine, routers []Router) *gin.Engine {
 		})
 	}
 	return r
+}
+
+func addRequest(ctx *gin.Context) {
+	setContext(ctx, context.WithValue(getContext(ctx), constant.RequestKey, ctx.Request))
 }
 
 func getHeader(ctx *gin.Context) {

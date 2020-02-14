@@ -8,7 +8,7 @@ import (
 	"os"
 )
 
-func InitLogger(c context.Context) {
+func InitLogger(c context.Context) error {
 	// 获取配置
 	conf := c.Value(constant.ConfigKey).(config.Config)
 
@@ -26,11 +26,12 @@ func InitLogger(c context.Context) {
 	// Only log the warning severity or above.
 	level, err := logger.ParseLevel(conf.Log.Level)
 	if err != nil {
-		panic(err)
+		return err
 	}
 	logger.SetLevel(level)
 
 	// 打印函数与文件
 	logger.SetReportCaller(conf.Log.PrintMethod)
 
+	return nil
 }
