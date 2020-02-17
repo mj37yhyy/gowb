@@ -17,8 +17,9 @@ const (
 	LoggerKey  = "logger"
 	TraceKey   = "trace"
 
-	BodyKey    = "body"
-	HeaderKey  = "header"
-	ParamsKey  = "params"
-	RequestKey = "request"
+	BodyKey        = "body"
+	HeaderKey      = "header"
+	ParamsKey      = "params"
+	RequestKey     = "request"
+	TransactionKey = "tx"
 )

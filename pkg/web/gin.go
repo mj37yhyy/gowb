@@ -5,14 +5,17 @@ import (
 	"fmt"
 	"github.com/chenjiandongx/ginprom"
 	"github.com/gin-gonic/gin"
+	"github.com/jinzhu/gorm"
 	"github.com/mj37yhyy/gowb/pkg/config"
 	"github.com/mj37yhyy/gowb/pkg/constant"
+	"github.com/mj37yhyy/gowb/pkg/db"
 	"github.com/mj37yhyy/gowb/pkg/model"
 	"github.com/mj37yhyy/gowb/pkg/web/middleware"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"io/ioutil"
 	"log"
 	"net/http"
+	"net/http/httputil"
 	"os"
 	"os/signal"
 	"syscall"
@@ -20,10 +23,13 @@ import (
 )
 
 type HandlerFunc func(context.Context) (model.Response, error)
+type Director func(req *http.Request)
 type Router struct {
-	Path    string
-	Method  string
-	Handler HandlerFunc
+	Path                string
+	Method              string
+	Handler             HandlerFunc
+	OpenFlatTransaction bool
+	Director            Director
 }
 
 func Bootstrap(ctx context.Context) {
@@ -109,10 +115,24 @@ func initGin(c context.Context) (r *gin.Engine) {
 	return r
 }
 
+/**
+路由
+*/
 func router(r *gin.Engine, routers []Router) *gin.Engine {
+	baseHandle(r)
+	doHandle(r, routers)
+	return r
+}
+
+/*
+基础处理
+*/
+func baseHandle(r *gin.Engine) {
 	// 404 Handler.
 	r.NoRoute(func(c *gin.Context) {
-		c.String(http.StatusNotFound, "The incorrect API route.")
+		resp := model.Response{}
+		resp.SetError(model.ErrorInfo{Code: http.StatusNotFound, Message: "The incorrect API route."})
+		c.JSON(http.StatusNotFound, resp)
 	})
 
 	r.GET("/health", func(c *gin.Context) {
@@ -120,42 +140,77 @@ func router(r *gin.Engine, routers []Router) *gin.Engine {
 	})
 
 	r.GET("/metrics", ginprom.PromHandler(promhttp.Handler()))
+}
 
+/**
+用户函数处理
+*/
+func doHandle(r *gin.Engine, routers []Router) {
 	for _, router := range routers {
 		ch := make(chan int)
 		go func(_router Router) {
 			r.Handle(_router.Method, _router.Path, func(ctx *gin.Context) {
-				c := getContext(ctx)
-				getBody(c, ctx)
-				getParams(c, ctx)
-				getHeader(c, ctx)
-				addRequest(c, ctx)
-
-				resp, err := _router.Handler(c)
-
-				if err != nil {
-					ctx.JSON(resp.Error.Code, resp)
+				if router.Director != nil {
+					//透传
+					proxy := &httputil.ReverseProxy{Director: router.Director}
+					proxy.ServeHTTP(ctx.Writer, ctx.Request)
 				} else {
-					ctx.JSON(http.StatusOK, resp)
+					//调用
+					c := getContext(ctx)
+					getBody(c, ctx)
+					getParams(c, ctx)
+					getHeader(c, ctx)
+					addRequest(c, ctx)
+					call(_router, c, ctx)
 				}
 			})
 			ch <- 0
 		}(router)
 		<-ch
 	}
-	return r
 }
 
+/*
+调用用户函数
+*/
+func call(_router Router, c context.Context, ctx *gin.Context) {
+	var tx *gorm.DB
+	if _router.OpenFlatTransaction {
+		tx = db.DB.Begin()
+		setContext(ctx, context.WithValue(c, constant.TransactionKey, tx))
+	}
+	resp, err := _router.Handler(c)
+
+	if err != nil {
+		if tx != nil && _router.OpenFlatTransaction {
+			tx.Rollback()
+		}
+		ctx.JSON(resp.Error.Code, resp)
+	} else {
+		if tx != nil && _router.OpenFlatTransaction {
+			tx.Commit()
+		}
+		ctx.JSON(http.StatusOK, resp)
+	}
+}
+
+/*
+将request放入上下文
+*/
 func addRequest(c context.Context, ctx *gin.Context) {
 	setContext(ctx, context.WithValue(c, constant.RequestKey, ctx.Request))
 }
 
+/*
+将header放入上下文
+*/
 func getHeader(c context.Context, ctx *gin.Context) {
-	//var head = ctx.Request.Header
-	//fmt.Println(head)
 	setContext(ctx, context.WithValue(c, constant.HeaderKey, ctx.Request.Header))
 }
 
+/*
+将参数放入上下文
+*/
 func getParams(c context.Context, ctx *gin.Context) {
 	request := ctx.Request
 	var params = make(map[string][]string)
@@ -175,11 +230,13 @@ func getParams(c context.Context, ctx *gin.Context) {
 		params[key] = val
 	}
 
-	//fmt.Println(params)
 	setContext(ctx, context.WithValue(c, constant.ParamsKey, params))
 	return
 }
 
+/*
+将body放入上下文
+*/
 func getBody(c context.Context, ctx *gin.Context) {
 	body, _ := ioutil.ReadAll(ctx.Request.Body)
 	//fmt.Println(body)
