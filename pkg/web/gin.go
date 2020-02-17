@@ -122,57 +122,41 @@ func router(r *gin.Engine, routers []Router) *gin.Engine {
 	r.GET("/metrics", ginprom.PromHandler(promhttp.Handler()))
 
 	for _, router := range routers {
-		if router.Method == "GET" {
-			r.GET(router.Path, func(ctx *gin.Context) {
-				doHandle(ctx, router)
+		ch := make(chan int)
+		go func(_router Router) {
+			r.Handle(_router.Method, _router.Path, func(ctx *gin.Context) {
+				c := getContext(ctx)
+				getBody(c, ctx)
+				getParams(c, ctx)
+				getHeader(c, ctx)
+				addRequest(c, ctx)
+
+				resp, err := _router.Handler(c)
+
+				if err != nil {
+					ctx.JSON(resp.Error.Code, resp)
+				} else {
+					ctx.JSON(http.StatusOK, resp)
+				}
 			})
-		} else if router.Method == "POST" {
-			r.POST(router.Path, func(ctx *gin.Context) {
-				doHandle(ctx, router)
-			})
-		} else if router.Method == "DELETE" {
-			r.DELETE(router.Path, func(ctx *gin.Context) {
-				doHandle(ctx, router)
-			})
-		} else if router.Method == "PUT" {
-			r.PUT(router.Path, func(ctx *gin.Context) {
-				doHandle(ctx, router)
-			})
-		} else {
-			r.Handle(router.Method, router.Path, func(ctx *gin.Context) {
-				doHandle(ctx, router)
-			})
-		}
+			ch <- 0
+		}(router)
+		<-ch
 	}
 	return r
 }
 
-func doHandle(ctx *gin.Context, router Router) {
-	getBody(ctx)
-	getParams(ctx)
-	getHeader(ctx)
-	addRequest(ctx)
-
-	resp, err := router.Handler(getContext(ctx))
-
-	if err != nil {
-		ctx.JSON(resp.Error.Code, resp)
-	} else {
-		ctx.JSON(http.StatusOK, resp)
-	}
+func addRequest(c context.Context, ctx *gin.Context) {
+	setContext(ctx, context.WithValue(c, constant.RequestKey, ctx.Request))
 }
 
-func addRequest(ctx *gin.Context) {
-	setContext(ctx, context.WithValue(getContext(ctx), constant.RequestKey, ctx.Request))
-}
-
-func getHeader(ctx *gin.Context) {
+func getHeader(c context.Context, ctx *gin.Context) {
 	//var head = ctx.Request.Header
 	//fmt.Println(head)
-	setContext(ctx, context.WithValue(getContext(ctx), constant.HeaderKey, ctx.Request.Header))
+	setContext(ctx, context.WithValue(c, constant.HeaderKey, ctx.Request.Header))
 }
 
-func getParams(ctx *gin.Context) {
+func getParams(c context.Context, ctx *gin.Context) {
 	request := ctx.Request
 	var params = make(map[string][]string)
 
@@ -192,14 +176,14 @@ func getParams(ctx *gin.Context) {
 	}
 
 	//fmt.Println(params)
-	setContext(ctx, context.WithValue(getContext(ctx), constant.ParamsKey, params))
+	setContext(ctx, context.WithValue(c, constant.ParamsKey, params))
 	return
 }
 
-func getBody(ctx *gin.Context) {
+func getBody(c context.Context, ctx *gin.Context) {
 	body, _ := ioutil.ReadAll(ctx.Request.Body)
 	//fmt.Println(body)
-	setContext(ctx, context.WithValue(getContext(ctx), constant.BodyKey, body))
+	setContext(ctx, context.WithValue(c, constant.BodyKey, body))
 }
 
 func getContext(ctx *gin.Context) context.Context {
