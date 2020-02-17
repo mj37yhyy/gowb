@@ -122,22 +122,44 @@ func router(r *gin.Engine, routers []Router) *gin.Engine {
 	r.GET("/metrics", ginprom.PromHandler(promhttp.Handler()))
 
 	for _, router := range routers {
-		r.Handle(router.Method, router.Path, func(ctx *gin.Context) {
-			getBody(ctx)
-			getParams(ctx)
-			getHeader(ctx)
-			addRequest(ctx)
-
-			resp, err := router.Handler(getContext(ctx))
-
-			if err != nil {
-				ctx.JSON(resp.Error.Code, resp)
-			} else {
-				ctx.JSON(http.StatusOK, resp)
-			}
-		})
+		if router.Method == "GET" {
+			r.GET(router.Path, func(ctx *gin.Context) {
+				doHandle(ctx, router)
+			})
+		} else if router.Method == "POST" {
+			r.POST(router.Path, func(ctx *gin.Context) {
+				doHandle(ctx, router)
+			})
+		} else if router.Method == "DELETE" {
+			r.DELETE(router.Path, func(ctx *gin.Context) {
+				doHandle(ctx, router)
+			})
+		} else if router.Method == "PUT" {
+			r.PUT(router.Path, func(ctx *gin.Context) {
+				doHandle(ctx, router)
+			})
+		} else {
+			r.Handle(router.Method, router.Path, func(ctx *gin.Context) {
+				doHandle(ctx, router)
+			})
+		}
 	}
 	return r
+}
+
+func doHandle(ctx *gin.Context, router Router) {
+	getBody(ctx)
+	getParams(ctx)
+	getHeader(ctx)
+	addRequest(ctx)
+
+	resp, err := router.Handler(getContext(ctx))
+
+	if err != nil {
+		ctx.JSON(resp.Error.Code, resp)
+	} else {
+		ctx.JSON(http.StatusOK, resp)
+	}
 }
 
 func addRequest(ctx *gin.Context) {
