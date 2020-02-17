@@ -29,6 +29,7 @@ type Router struct {
 	Method              string
 	Handler             HandlerFunc
 	OpenFlatTransaction bool
+	ReverseProxy        bool
 	Director            Director
 }
 
@@ -150,7 +151,7 @@ func doHandle(r *gin.Engine, routers []Router) {
 		ch := make(chan int)
 		go func(_router Router) {
 			r.Handle(_router.Method, _router.Path, func(ctx *gin.Context) {
-				if router.Director != nil {
+				if _router.ReverseProxy {
 					//透传
 					proxy := &httputil.ReverseProxy{Director: router.Director}
 					proxy.ServeHTTP(ctx.Writer, ctx.Request)
@@ -239,7 +240,6 @@ func getParams(c context.Context, ctx *gin.Context) {
 */
 func getBody(c context.Context, ctx *gin.Context) {
 	body, _ := ioutil.ReadAll(ctx.Request.Body)
-	//fmt.Println(body)
 	setContext(ctx, context.WithValue(c, constant.BodyKey, body))
 }
 
