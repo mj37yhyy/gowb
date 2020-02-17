@@ -157,12 +157,11 @@ func doHandle(r *gin.Engine, routers []Router) {
 					proxy.ServeHTTP(ctx.Writer, ctx.Request)
 				} else {
 					//调用
-					c := getContext(ctx)
-					getBody(c, ctx)
-					getParams(c, ctx)
-					getHeader(c, ctx)
-					addRequest(c, ctx)
-					call(_router, c, ctx)
+					getBody(ctx)
+					getParams(ctx)
+					getHeader(ctx)
+					addRequest(ctx)
+					call(_router, ctx)
 				}
 			})
 			ch <- 0
@@ -174,13 +173,13 @@ func doHandle(r *gin.Engine, routers []Router) {
 /*
 调用用户函数
 */
-func call(_router Router, c context.Context, ctx *gin.Context) {
+func call(_router Router, ctx *gin.Context) {
 	var tx *gorm.DB
 	if _router.OpenFlatTransaction {
 		tx = db.DB.Begin()
-		setContext(ctx, context.WithValue(c, constant.TransactionKey, tx))
+		setContext(ctx, context.WithValue(getContext(ctx), constant.TransactionKey, tx))
 	}
-	resp, err := _router.Handler(c)
+	resp, err := _router.Handler(getContext(ctx))
 
 	if err != nil {
 		if tx != nil && _router.OpenFlatTransaction {
@@ -198,21 +197,21 @@ func call(_router Router, c context.Context, ctx *gin.Context) {
 /*
 将request放入上下文
 */
-func addRequest(c context.Context, ctx *gin.Context) {
-	setContext(ctx, context.WithValue(c, constant.RequestKey, ctx.Request))
+func addRequest(ctx *gin.Context) {
+	setContext(ctx, context.WithValue(getContext(ctx), constant.RequestKey, ctx.Request))
 }
 
 /*
 将header放入上下文
 */
-func getHeader(c context.Context, ctx *gin.Context) {
-	setContext(ctx, context.WithValue(c, constant.HeaderKey, ctx.Request.Header))
+func getHeader(ctx *gin.Context) {
+	setContext(ctx, context.WithValue(getContext(ctx), constant.HeaderKey, ctx.Request.Header))
 }
 
 /*
 将参数放入上下文
 */
-func getParams(c context.Context, ctx *gin.Context) {
+func getParams(ctx *gin.Context) {
 	request := ctx.Request
 	var params = make(map[string][]string)
 
@@ -231,16 +230,16 @@ func getParams(c context.Context, ctx *gin.Context) {
 		params[key] = val
 	}
 
-	setContext(ctx, context.WithValue(c, constant.ParamsKey, params))
+	setContext(ctx, context.WithValue(getContext(ctx), constant.ParamsKey, params))
 	return
 }
 
 /*
 将body放入上下文
 */
-func getBody(c context.Context, ctx *gin.Context) {
+func getBody(ctx *gin.Context) {
 	body, _ := ioutil.ReadAll(ctx.Request.Body)
-	setContext(ctx, context.WithValue(c, constant.BodyKey, body))
+	setContext(ctx, context.WithValue(getContext(ctx), constant.BodyKey, body))
 }
 
 func getContext(ctx *gin.Context) context.Context {
