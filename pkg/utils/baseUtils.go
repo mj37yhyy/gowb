@@ -3,6 +3,7 @@ package utils
 import (
 	"database/sql/driver"
 	"fmt"
+	"reflect"
 	"time"
 )
 
@@ -41,4 +42,15 @@ func (t *TimeNormal) Scan(v interface{}) error {
 		return nil
 	}
 	return fmt.Errorf("can not convert %v to timestamp", v)
+}
+
+func IsNil(i interface{}) bool {
+	defer func() {
+		recover()
+	}()
+	vi := reflect.ValueOf(i)
+	if vi.Kind() == reflect.Ptr {
+		return vi.IsNil()
+	}
+	return false
 }
