@@ -157,9 +157,9 @@ func doHandle(r *gin.Engine, routers []Router) {
 					proxy.ServeHTTP(ctx.Writer, ctx.Request)
 				} else {
 					//调用
-					getBody(ctx)
-					getParams(ctx)
-					getHeader(ctx)
+					addBody(ctx)
+					addParams(ctx)
+					addHeader(ctx)
 					addRequest(ctx)
 					call(_router, ctx)
 				}
@@ -204,14 +204,14 @@ func addRequest(ctx *gin.Context) {
 /*
 将header放入上下文
 */
-func getHeader(ctx *gin.Context) {
+func addHeader(ctx *gin.Context) {
 	setContext(ctx, context.WithValue(getContext(ctx), constant.HeaderKey, ctx.Request.Header))
 }
 
 /*
 将参数放入上下文
 */
-func getParams(ctx *gin.Context) {
+func addParams(ctx *gin.Context) {
 	request := ctx.Request
 	var params = make(map[string][]string)
 
@@ -237,7 +237,7 @@ func getParams(ctx *gin.Context) {
 /*
 将body放入上下文
 */
-func getBody(ctx *gin.Context) {
+func addBody(ctx *gin.Context) {
 	body, _ := ioutil.ReadAll(ctx.Request.Body)
 	setContext(ctx, context.WithValue(getContext(ctx), constant.BodyKey, body))
 }
