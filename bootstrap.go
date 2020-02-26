@@ -48,10 +48,12 @@ func Bootstrap(g Gowb) (err error) {
 			c := context.WithValue(context.Background(), "routers", g.Routers)
 			c = context.WithValue(c, "config", _config)
 
-			//初始化mysql
-			err := initMysql(c, g)
-			if err != nil {
-				return err
+			if _config.Mysql.Enabled {
+				//初始化mysql
+				err := initMysql(c, g)
+				if err != nil {
+					return err
+				}
 			}
 
 			//初始化日志
