@@ -15,7 +15,15 @@ func InitLogger(c context.Context) error {
 	// 日志json格式
 	if conf.Log.Formatter == "json" {
 		// Log as JSON instead of the default ASCII formatter.
-		logger.SetFormatter(&logger.JSONFormatter{})
+		logger.SetFormatter(&logger.JSONFormatter{
+			TimestampFormat: "2006-01-02 15:04:05",
+		})
+	} else if conf.Log.Formatter == "text" {
+		logger.SetFormatter(&logger.TextFormatter{
+			TimestampFormat:           "2006-01-02 15:04:05",
+			ForceColors:               true,
+			EnvironmentOverrideColors: true,
+		})
 	}
 
 	// Output to stdout instead of the default stderr
