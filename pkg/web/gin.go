@@ -1,6 +1,7 @@
 package web
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"github.com/chenjiandongx/ginprom"
@@ -256,6 +257,7 @@ func addParams(ctx *gin.Context) {
 */
 func addBody(ctx *gin.Context) {
 	body, _ := ioutil.ReadAll(ctx.Request.Body)
+	ctx.Request.Body = ioutil.NopCloser(bytes.NewBuffer(body))
 	setContext(ctx, context.WithValue(getContext(ctx), constant.BodyKey, body))
 }
 
