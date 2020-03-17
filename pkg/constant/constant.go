@@ -21,5 +21,6 @@ const (
 	HeaderKey      = "header"
 	ParamsKey      = "params"
 	RequestKey     = "request"
+	ShouldBindKey  = "shouldBind"
 	TransactionKey = "tx"
 )

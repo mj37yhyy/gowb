@@ -20,6 +20,7 @@ import (
 	"os/signal"
 	"syscall"
 	"time"
+	"unsafe"
 )
 
 type HandlerFunc func(context.Context) (model.Response, error)
@@ -161,6 +162,7 @@ func doHandle(r *gin.Engine, routers []Router) {
 					addParams(ctx)
 					addHeader(ctx)
 					addRequest(ctx)
+					addShouldBind(ctx)
 					call(_router, ctx)
 				}
 			})
@@ -168,6 +170,12 @@ func doHandle(r *gin.Engine, routers []Router) {
 		}(router)
 		<-ch
 	}
+}
+
+func addShouldBind(ctx *gin.Context) {
+	setContext(ctx, context.WithValue(getContext(ctx), constant.ShouldBindKey, func(obj *interface{}) error {
+		return ctx.ShouldBind(obj)
+	}))
 }
 
 /*
@@ -185,7 +193,9 @@ func call(_router Router, ctx *gin.Context) {
 		if tx != nil && _router.OpenFlatTransaction {
 			tx.Rollback()
 		}
-		ctx.JSON(resp.Error.Code, resp)
+		if unsafe.Sizeof(resp) > 0 {
+			ctx.JSON(resp.Error.Code, resp)
+		}
 	} else {
 		if tx != nil && _router.OpenFlatTransaction {
 			tx.Commit()
