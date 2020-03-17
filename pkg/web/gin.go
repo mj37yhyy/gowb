@@ -163,6 +163,7 @@ func doHandle(r *gin.Engine, routers []Router) {
 					addHeader(ctx)
 					addRequest(ctx)
 					addShouldBind(ctx)
+					addBind(ctx)
 					call(_router, ctx)
 				}
 			})
@@ -175,6 +176,12 @@ func doHandle(r *gin.Engine, routers []Router) {
 func addShouldBind(ctx *gin.Context) {
 	setContext(ctx, context.WithValue(getContext(ctx), constant.ShouldBindKey, func(obj interface{}) error {
 		return ctx.ShouldBind(obj)
+	}))
+}
+
+func addBind(ctx *gin.Context) {
+	setContext(ctx, context.WithValue(getContext(ctx), constant.BindKey, func(obj interface{}) error {
+		return ctx.Bind(obj)
 	}))
 }
 
