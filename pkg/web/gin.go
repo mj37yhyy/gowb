@@ -173,7 +173,7 @@ func doHandle(r *gin.Engine, routers []Router) {
 }
 
 func addShouldBind(ctx *gin.Context) {
-	setContext(ctx, context.WithValue(getContext(ctx), constant.ShouldBindKey, func(obj *interface{}) error {
+	setContext(ctx, context.WithValue(getContext(ctx), constant.ShouldBindKey, func(obj interface{}) error {
 		return ctx.ShouldBind(obj)
 	}))
 }
