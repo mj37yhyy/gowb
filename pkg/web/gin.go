@@ -13,6 +13,8 @@ import (
 	"github.com/mj37yhyy/gowb/pkg/model"
 	"github.com/mj37yhyy/gowb/pkg/web/middleware"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"github.com/swaggo/gin-swagger"
+	"github.com/swaggo/gin-swagger/swaggerFiles"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -143,6 +145,7 @@ func baseHandle(r *gin.Engine) {
 	})
 
 	r.GET("/metrics", ginprom.PromHandler(promhttp.Handler()))
+	r.GET("/docs/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 }
 
 /**

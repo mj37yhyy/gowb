@@ -10,6 +10,7 @@ require (
 	github.com/prometheus/client_golang v1.5.1
 	github.com/sirupsen/logrus v1.4.2
 	github.com/spf13/viper v1.6.2
+	github.com/swaggo/gin-swagger v1.2.0
 	github.com/willf/pad v0.0.0-20200313202418-172aa767f2a4
 	github.com/xiaolin8/lager v0.0.0-20191218124133-d87657fbc6c6
 )
