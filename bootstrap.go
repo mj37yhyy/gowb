@@ -11,6 +11,7 @@ import (
 	"github.com/mj37yhyy/gowb/pkg/web"
 	"os"
 	"runtime"
+	"unsafe"
 )
 
 const logo = `
@@ -25,6 +26,7 @@ const logo = `
 type Gowb struct {
 	ConfigName       string
 	ConfigType       string
+	config           config.Config
 	Routers          []web.Router
 	AutoCreateTables []interface{}
 }
@@ -45,27 +47,38 @@ func Bootstrap(g Gowb) (err error) {
 		if err := cu.Unmarshal(&_config); err != nil {
 			return err
 		} else {
-			c := context.WithValue(context.Background(), "routers", g.Routers)
-			c = context.WithValue(c, "config", _config)
-
-			//初始化mysql
-			err := initMysql(c, g)
-			if err != nil {
+			if err := doBootstrap(g, _config); err != nil {
 				return err
 			}
-
-			//初始化日志
-			err = gowbLog.InitLogger(c)
-			if err != nil {
-				return err
-			}
-
-			//初始化gin
-			web.Bootstrap(c)
+		}
+	} else if unsafe.Sizeof(g.config) > 0 {
+		if err := doBootstrap(g, g.config); err != nil {
+			return err
 		}
 	} else {
 		return errors.New("ConfigName and ConfigType is empty!")
 	}
+	return nil
+}
+
+func doBootstrap(g Gowb, _config config.Config) error {
+	c := context.WithValue(context.Background(), "routers", g.Routers)
+	c = context.WithValue(c, "config", _config)
+
+	//初始化mysql
+	err := initMysql(c, g)
+	if err != nil {
+		return err
+	}
+
+	//初始化日志
+	err = gowbLog.InitLogger(c)
+	if err != nil {
+		return err
+	}
+
+	//初始化gin
+	web.Bootstrap(c)
 	return nil
 }
 
