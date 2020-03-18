@@ -26,7 +26,7 @@ const logo = `
 type Gowb struct {
 	ConfigName       string
 	ConfigType       string
-	config           config.Config
+	Config           config.Config
 	Routers          []web.Router
 	AutoCreateTables []interface{}
 }
