@@ -32,6 +32,7 @@ type Trace struct {
 }
 
 type Mysql struct {
+	Enabled         bool          `mapstructure:"enabled" yaml:"enabled" json:"enabled"`
 	UserName        string        `mapstructure:"userName" yaml:"userName" json:"userName"`
 	Password        string        `mapstructure:"password" yaml:"password" json:"password"`
 	Host            string        `mapstructure:"host" yaml:"host" json:"host"`

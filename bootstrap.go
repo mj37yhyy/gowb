@@ -61,18 +61,20 @@ func Bootstrap(g Gowb) (err error) {
 	return nil
 }
 
-func doBootstrap(g Gowb, _config config.Config) error {
+func doBootstrap(g Gowb, config config.Config) error {
 	c := context.WithValue(context.Background(), "routers", g.Routers)
-	c = context.WithValue(c, "config", _config)
+	c = context.WithValue(c, "config", config)
 
 	//初始化mysql
-	err := initMysql(c, g)
-	if err != nil {
-		return err
+	if config.Mysql.Enabled {
+		err := initMysql(c, g)
+		if err != nil {
+			return err
+		}
 	}
 
 	//初始化日志
-	err = gowbLog.InitLogger(c)
+	err := gowbLog.InitLogger(c)
 	if err != nil {
 		return err
 	}
