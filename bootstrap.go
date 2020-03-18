@@ -51,8 +51,8 @@ func Bootstrap(g Gowb) (err error) {
 				return err
 			}
 		}
-	} else if unsafe.Sizeof(g.config) > 0 {
-		if err := doBootstrap(g, g.config); err != nil {
+	} else if unsafe.Sizeof(g.Config) > 0 {
+		if err := doBootstrap(g, g.Config); err != nil {
 			return err
 		}
 	} else {
