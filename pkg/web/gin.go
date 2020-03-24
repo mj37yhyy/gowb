@@ -194,7 +194,7 @@ func addBind(ctx *gin.Context) {
 	}))
 	setContext(ctx, context.WithValue(getContext(ctx), constant.BindWithKey,
 		func(obj interface{}, bt constant.BindingType) error {
-			return ctx.BindWith(obj, getBinding(bt))
+			return ctx.MustBindWith(obj, getBinding(bt))
 		}))
 }
 
