@@ -28,7 +28,7 @@ import (
 )
 
 type HandlerFunc func(context.Context) (model.Response, error)
-type Director func(req *http.Request)
+type Director func(req *http.Request) func(req *http.Request)
 type Router struct {
 	Path                string
 	Method              string
@@ -159,7 +159,8 @@ func doHandle(r *gin.Engine, routers []Router) {
 			r.Handle(_router.Method, _router.Path, func(ctx *gin.Context) {
 				if _router.ReverseProxy {
 					//透传
-					proxy := &httputil.ReverseProxy{Director: router.Director}
+					router.Director(ctx.Request)
+					proxy := &httputil.ReverseProxy{Director: router.Director(ctx.Request)}
 					proxy.ServeHTTP(ctx.Writer, ctx.Request)
 				} else {
 					//调用
