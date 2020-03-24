@@ -25,6 +25,7 @@ type Log struct {
 type Web struct {
 	Port    int    `mapstructure:"port" yaml:"port" json:"port"`
 	RunMode string `mapstructure:"runMode" yaml:"runMode" json:"runMode"`
+	LogSkipPath []string `mapstructure:"logSkipPath" yaml:"logSkipPath" json:"logSkipPath"`
 }
 
 type Trace struct {
