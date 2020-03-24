@@ -1,5 +1,7 @@
 package constant
 
+type BindingType string
+
 const (
 	// http-header请求参数名
 
@@ -26,4 +28,17 @@ const (
 	ShouldBindKey     = "shouldBind"
 	ShouldBindWithKey = "shouldBindWith"
 	TransactionKey    = "tx"
+
+	BindingUri           BindingType = "uri"
+	BindingForm          BindingType = "form"
+	BindingFormPost      BindingType = "formPost"
+	BindingFormMultipart BindingType = "multipart"
+	BindingQuery         BindingType = "query"
+	BindingHeader        BindingType = "header"
+	BindingJson          BindingType = "json"
+	BindingYaml          BindingType = "yaml"
+	BindingXml           BindingType = "xml"
+	BindingValidator     BindingType = "validator"
+	BindingMsgPack       BindingType = "msgPack"
+	BindingProtoBuf      BindingType = "protoBuf"
 )

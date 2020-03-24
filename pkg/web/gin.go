@@ -183,8 +183,8 @@ func addShouldBind(ctx *gin.Context) {
 		return ctx.ShouldBind(obj)
 	}))
 	setContext(ctx, context.WithValue(getContext(ctx), constant.ShouldBindWithKey,
-		func(obj interface{}, b binding.Binding) error {
-			return ctx.ShouldBindWith(obj, b)
+		func(obj interface{}, bt constant.BindingType) error {
+			return ctx.ShouldBindWith(obj, getBinging(bt))
 		}))
 }
 
@@ -193,9 +193,39 @@ func addBind(ctx *gin.Context) {
 		return ctx.Bind(obj)
 	}))
 	setContext(ctx, context.WithValue(getContext(ctx), constant.BindWithKey,
-		func(obj interface{}, b binding.Binding) error {
-			return ctx.BindWith(obj, b)
+		func(obj interface{}, bt constant.BindingType) error {
+			return ctx.BindWith(obj, getBinging(bt))
 		}))
+}
+
+func getBinging(bt constant.BindingType) binding.Binding {
+	switch bt {
+	case constant.BindingForm:
+		return binding.Form
+	/*case constant.BindingUri:
+	return binding.Uri*/
+	case constant.BindingFormPost:
+		return binding.FormPost
+	case constant.BindingFormMultipart:
+		return binding.FormMultipart
+	case constant.BindingQuery:
+		return binding.Query
+	case constant.BindingHeader:
+		return binding.Header
+	case constant.BindingJson:
+		return binding.JSON
+	case constant.BindingYaml:
+		return binding.YAML
+	case constant.BindingXml:
+		return binding.XML
+	/*case constant.BindingValidator:
+	return binding.Validator*/
+	case constant.BindingMsgPack:
+		return binding.MsgPack
+	case constant.BindingProtoBuf:
+		return binding.ProtoBuf
+	}
+	return nil
 }
 
 /*
