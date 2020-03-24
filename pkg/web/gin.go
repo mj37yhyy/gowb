@@ -106,10 +106,10 @@ func doRouter(c context.Context, routers []Router) *gin.Engine {
 func initGin(c context.Context) (r *gin.Engine) {
 	r = gin.New()
 
-	config := c.Value(constant.ConfigKey).(config.Config)
+	_config := c.Value(constant.ConfigKey).(config.Config)
 
 	r.Use(gin.LoggerWithConfig(gin.LoggerConfig{
-		SkipPaths: config.Web.LogSkipPath,
+		SkipPaths: _config.Web.LogSkipPath,
 	}))
 	r.Use(gin.Recovery())
 
