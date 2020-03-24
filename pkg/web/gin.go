@@ -224,8 +224,9 @@ func getBinding(bt constant.BindingType) binding.Binding {
 		return binding.MsgPack
 	case constant.BindingProtoBuf:
 		return binding.ProtoBuf
+	default:
+		return binding.Form
 	}
-	return nil
 }
 
 /*
