@@ -202,8 +202,6 @@ func getBinding(bt constant.BindingType) binding.Binding {
 	switch bt {
 	case constant.BindingForm:
 		return binding.Form
-	/*case constant.BindingUri:
-	return binding.Uri*/
 	case constant.BindingFormPost:
 		return binding.FormPost
 	case constant.BindingFormMultipart:
@@ -218,8 +216,6 @@ func getBinding(bt constant.BindingType) binding.Binding {
 		return binding.YAML
 	case constant.BindingXml:
 		return binding.XML
-	/*case constant.BindingValidator:
-	return binding.Validator*/
 	case constant.BindingMsgPack:
 		return binding.MsgPack
 	case constant.BindingProtoBuf:
