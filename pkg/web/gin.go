@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/chenjiandongx/ginprom"
 	"github.com/gin-gonic/gin"
+	"github.com/gin-gonic/gin/binding"
 	"github.com/jinzhu/gorm"
 	"github.com/mj37yhyy/gowb/pkg/config"
 	"github.com/mj37yhyy/gowb/pkg/constant"
@@ -181,12 +182,20 @@ func addShouldBind(ctx *gin.Context) {
 	setContext(ctx, context.WithValue(getContext(ctx), constant.ShouldBindKey, func(obj interface{}) error {
 		return ctx.ShouldBind(obj)
 	}))
+	setContext(ctx, context.WithValue(getContext(ctx), constant.ShouldBindWithKey,
+		func(obj interface{}, b binding.Binding) error {
+			return ctx.ShouldBindWith(obj, b)
+		}))
 }
 
 func addBind(ctx *gin.Context) {
 	setContext(ctx, context.WithValue(getContext(ctx), constant.BindKey, func(obj interface{}) error {
 		return ctx.Bind(obj)
 	}))
+	setContext(ctx, context.WithValue(getContext(ctx), constant.BindWithKey,
+		func(obj interface{}, b binding.Binding) error {
+			return ctx.BindWith(obj, b)
+		}))
 }
 
 /*
