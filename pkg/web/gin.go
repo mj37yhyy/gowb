@@ -144,7 +144,7 @@ func baseHandle(r *gin.Engine) {
 	r.NoRoute(func(c *gin.Context) {
 		resp := model.Response{}
 		resp.SetError(model.ErrorInfo{
-			Code:    "NotFound",
+			Code:    http.StatusText(http.StatusNotFound),
 			Message: "The incorrect API route."})
 		c.JSON(http.StatusNotFound, resp)
 	})
