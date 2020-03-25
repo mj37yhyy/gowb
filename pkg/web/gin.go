@@ -142,7 +142,9 @@ func baseHandle(r *gin.Engine) {
 	// 404 Handler.
 	r.NoRoute(func(c *gin.Context) {
 		resp := model.Response{}
-		resp.SetError(model.ErrorInfo{Code: http.StatusNotFound, Message: "The incorrect API route."})
+		resp.SetError(model.ErrorInfo{HttpStatus: http.StatusNotFound,
+			Code:    "NotFound",
+			Message: "The incorrect API route."})
 		c.JSON(http.StatusNotFound, resp)
 	})
 
@@ -164,7 +166,6 @@ func doHandle(r *gin.Engine, routers []Router) {
 			r.Handle(_router.Method, _router.Path, func(ctx *gin.Context) {
 				if _router.ReverseProxy {
 					//透传
-					router.Director(ctx.Request)
 					proxy := &httputil.ReverseProxy{Director: router.Director(ctx.Request)}
 					proxy.ServeHTTP(ctx.Writer, ctx.Request)
 				} else {
@@ -247,7 +248,7 @@ func call(_router Router, ctx *gin.Context) {
 			tx.Rollback()
 		}
 		if unsafe.Sizeof(resp) > 0 {
-			ctx.JSON(resp.Error.Code, resp)
+			ctx.JSON(resp.Error.HttpStatus, resp)
 		}
 	} else {
 		if tx != nil && _router.OpenFlatTransaction {

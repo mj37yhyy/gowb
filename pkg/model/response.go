@@ -1,8 +1,9 @@
 package model
 
 type errorInfo struct {
-	Code    int    `json:"Code,omitempty"`
-	Message string `json:"Message,omitempty"`
+	HttpStatus int
+	Code       string `json:"Code,omitempty"`
+	Message    string `json:"Message,omitempty"`
 }
 
 type Response struct {
@@ -12,8 +13,9 @@ type Response struct {
 }
 
 type ErrorInfo struct {
-	Code    int
-	Message string
+	HttpStatus int
+	Code       string
+	Message    string
 }
 
 func NewResponse() *Response {
