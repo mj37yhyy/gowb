@@ -22,12 +22,14 @@ import (
 	"net/http/httputil"
 	"os"
 	"os/signal"
+	"strconv"
 	"syscall"
 	"time"
 	"unsafe"
 )
 
-type HandlerFunc func(context.Context) (model.Response, error)
+type HttpStatus int
+type HandlerFunc func(context.Context) (model.Response, HttpStatus)
 type Director func(req *http.Request) func(req *http.Request)
 type Router struct {
 	Path                string
@@ -248,7 +250,8 @@ func call(_router Router, ctx *gin.Context) {
 			tx.Rollback()
 		}
 		if unsafe.Sizeof(resp) > 0 {
-			ctx.JSON(resp.Error.HttpStatus, resp)
+			strconv.Atoi(err.Error())
+			ctx.JSON(strconv.Atoi(err.Error()), resp)
 		}
 	} else {
 		if tx != nil && _router.OpenFlatTransaction {
