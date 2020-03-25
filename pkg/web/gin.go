@@ -22,7 +22,6 @@ import (
 	"net/http/httputil"
 	"os"
 	"os/signal"
-	"strconv"
 	"syscall"
 	"time"
 	"unsafe"
@@ -144,7 +143,7 @@ func baseHandle(r *gin.Engine) {
 	// 404 Handler.
 	r.NoRoute(func(c *gin.Context) {
 		resp := model.Response{}
-		resp.SetError(model.ErrorInfo{HttpStatus: http.StatusNotFound,
+		resp.SetError(model.ErrorInfo{
 			Code:    "NotFound",
 			Message: "The incorrect API route."})
 		c.JSON(http.StatusNotFound, resp)
@@ -243,15 +242,14 @@ func call(_router Router, ctx *gin.Context) {
 		tx = db.DB.Begin()
 		setContext(ctx, context.WithValue(getContext(ctx), constant.TransactionKey, tx))
 	}
-	resp, err := _router.Handler(getContext(ctx))
+	resp, hs := _router.Handler(getContext(ctx))
 
-	if err != nil {
+	if hs > 0 {
 		if tx != nil && _router.OpenFlatTransaction {
 			tx.Rollback()
 		}
 		if unsafe.Sizeof(resp) > 0 {
-			strconv.Atoi(err.Error())
-			ctx.JSON(strconv.Atoi(err.Error()), resp)
+			ctx.JSON(int(hs), resp)
 		}
 	} else {
 		if tx != nil && _router.OpenFlatTransaction {
