@@ -244,18 +244,16 @@ func call(_router Router, ctx *gin.Context) {
 	}
 	resp, hs := _router.Handler(getContext(ctx))
 
-	if hs >= 400 {
-		if tx != nil && _router.OpenFlatTransaction {
+	if tx != nil && _router.OpenFlatTransaction {
+		if hs >= 400 {
 			tx.Rollback()
-		}
-		if unsafe.Sizeof(resp) > 0 {
-			ctx.JSON(int(hs), resp)
-		}
-	} else {
-		if tx != nil && _router.OpenFlatTransaction {
+		} else {
 			tx.Commit()
 		}
-		ctx.JSON(http.StatusOK, resp)
+	}
+
+	if unsafe.Sizeof(resp) > 0 {
+		ctx.JSON(int(hs), resp)
 	}
 }
 
