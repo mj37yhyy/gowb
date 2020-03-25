@@ -244,7 +244,7 @@ func call(_router Router, ctx *gin.Context) {
 	}
 	resp, hs := _router.Handler(getContext(ctx))
 
-	if hs > 0 {
+	if hs >= 400 {
 		if tx != nil && _router.OpenFlatTransaction {
 			tx.Rollback()
 		}
