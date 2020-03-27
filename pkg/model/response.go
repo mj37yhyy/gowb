@@ -1,19 +1,14 @@
 package model
 
-type errorInfo struct {
-	Code    string `json:"Code,omitempty"`
-	Message string `json:"Message,omitempty"`
-}
-
 type Response struct {
 	RequestId string      `json:"RequestId,omitempty"`
-	Error     *errorInfo  `json:"Error,omitempty"`
+	Error     *ErrorInfo  `json:"Error,omitempty"`
 	Data      interface{} `json:"Data,omitempty"`
 }
 
 type ErrorInfo struct {
-	Code    string
-	Message string
+	Code    string `json:"Code,omitempty"`
+	Message string `json:"Message,omitempty"`
 }
 
 func NewResponse() *Response {
@@ -25,7 +20,7 @@ func (r *Response) SetData(data interface{}) {
 }
 
 func (r *Response) SetError(err ErrorInfo) {
-	r.Error = &errorInfo{err.Code, err.Message}
+	r.Error = &err
 }
 
 func (r *Response) SetRequestId(requestId string) {
