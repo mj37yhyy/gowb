@@ -192,6 +192,9 @@ func addShouldBind(ctx *gin.Context) {
 	}))
 	setContext(ctx, context.WithValue(getContext(ctx), constant.ShouldBindWithKey,
 		func(obj interface{}, bt constant.BindingType) error {
+			if bt == constant.BindingUri {
+				return ctx.ShouldBindUri(obj)
+			}
 			return ctx.ShouldBindWith(obj, getBinding(bt))
 		}))
 }
@@ -202,6 +205,9 @@ func addBind(ctx *gin.Context) {
 	}))
 	setContext(ctx, context.WithValue(getContext(ctx), constant.BindWithKey,
 		func(obj interface{}, bt constant.BindingType) error {
+			if bt == constant.BindingUri {
+				return ctx.BindUri(obj)
+			}
 			return ctx.MustBindWith(obj, getBinding(bt))
 		}))
 }
