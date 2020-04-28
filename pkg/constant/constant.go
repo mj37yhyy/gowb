@@ -1,7 +1,6 @@
 package constant
 
 type BindingType string
-type Operate string
 
 const (
 	// http-header请求参数名
@@ -44,16 +43,16 @@ const (
 	BindingMsgPack       BindingType = "msgPack"
 	BindingProtoBuf      BindingType = "protoBuf"
 
-	AuditOperateKey    = "Operate"
-	AuditClusterKey    = "Cluster"
-	AuditNamespaceKey  = "Namespace"
-	AuditObjectTypeKey = "ObjectType"
-	AuditObjectKey     = "Object"
-	AuditUserKey       = "User"
-	AuditAccountKey    = "Account"
-
-	Create Operate = "create"
-	Delete Operate = "delete"
-	Modify Operate = "modify"
-	Query  Operate = "query"
+	AuditModuleKey      = "Module"
+	AuditOperateKey     = "Operate"
+	AuditClusterKey     = "Cluster"
+	AuditNamespaceKey   = "Namespace"
+	AuditDateKey        = "Date"
+	AuditObjectTypeKey  = "ObjectType"
+	AuditObjectKey      = "Object"
+	AuditClientIPKey    = "ClusterIP"
+	AuditAccountTypeKey = "AccountType"
+	AuditLogLevelKey    = "LogLevel"
+	AuditUserKey        = "User"
+	AuditAccountKey     = "Account"
 )

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"regexp"
 	"strings"
@@ -118,18 +119,34 @@ func Logger() gin.HandlerFunc {
 		c = context.WithValue(c, constant.LoggerKey, contextLogger)
 
 		// audit func
-		auditFunc := func(field map[string]interface{}, format string, args ...interface{}) {
+		auditFunc := func(params AuditLogParams) (*logger.Entry, string) {
+
 			auditField := make(map[string]interface{})
 			for key, value := range fieldMap {
 				auditField[key] = value
 			}
 			auditField["AuditLog"] = true
-			for key, value := range field {
-				auditField[key] = value
-			}
+			auditField[constant.AuditModuleKey] = params.Module
+			auditField[constant.AuditOperateKey] = params.Operate
+			auditField[constant.AuditClusterKey] = params.Cluster
+			auditField[constant.AuditNamespaceKey] = params.Namespace
+			auditField[constant.AuditObjectTypeKey] = params.ObjectType
+			auditField[constant.AuditObjectKey] = params.Object
+			auditField[constant.AuditClientIPKey] = ctx.ClientIP()
+			auditField[constant.AuditLogLevelKey] = params.LogLevel
 
+			user, accountType := getUser(fieldMap)
+			auditField[constant.AuditAccountTypeKey] = accountType
+
+			date := time.Now().Format("2006-01-02 15:04:05")
+			auditField[constant.AuditDateKey] = date
 			auditLogger := logger.WithFields(auditField)
-			auditLogger.Infof(format, args...)
+
+			if params.IsGenerateMsg {
+				return auditLogger, fmt.Sprintf("[%s] User(%s) %s %s(%s) at %s.",
+					ctx.ClientIP(), user, params.Operate, params.ObjectType, params.Object, date)
+			}
+			return auditLogger, ""
 		}
 
 		// 将audit function 对象插入上下文
@@ -139,4 +156,34 @@ func Logger() gin.HandlerFunc {
 		// Continue.
 		ctx.Next()
 	}
+}
+
+func getUser(fields map[string]interface{}) (id string, accountType string) {
+	userID, ok := fields[constant.AuditUserKey].(string)
+	if ok && userID != "" {
+		return userID, "Sub-account"
+	}
+	accountID, ok := fields[constant.AuditAccountKey].(string)
+	if ok && userID != "" {
+		return accountID, "Master"
+	}
+	return "", ""
+}
+
+type AuditLogParams struct {
+	Module     string
+	Cluster    string
+	Namespace  string
+	Operate    string
+	ObjectType string
+	Object     string
+	LogLevel   logger.Level
+
+	IsGenerateMsg bool
+}
+
+func GetAuditLogger(ctx context.Context, params AuditLogParams) (*logger.Entry, string) {
+	auditFunc := ctx.Value(constant.AuditLoggerKey).(func(params AuditLogParams) (*logger.Entry, string))
+
+	return auditFunc(params)
 }
