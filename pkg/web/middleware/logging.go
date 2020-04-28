@@ -4,18 +4,19 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"github.com/mj37yhyy/gowb/pkg/config"
-	"github.com/mj37yhyy/gowb/pkg/constant"
-	"github.com/mj37yhyy/gowb/pkg/model"
-	logger "github.com/sirupsen/logrus"
-	"github.com/xiaolin8/lager"
 	"io/ioutil"
 	"regexp"
 	"strings"
 	"time"
 
+	"github.com/mj37yhyy/gowb/pkg/config"
+	"github.com/mj37yhyy/gowb/pkg/constant"
+	"github.com/mj37yhyy/gowb/pkg/model"
+
 	"github.com/gin-gonic/gin"
+	logger "github.com/sirupsen/logrus"
 	"github.com/willf/pad"
+	"github.com/xiaolin8/lager"
 )
 
 type bodyLogWriter struct {
@@ -115,9 +116,27 @@ func Logger() gin.HandlerFunc {
 
 		// 将logger对象插入上下文
 		c = context.WithValue(c, constant.LoggerKey, contextLogger)
+
+		// audit func
+		auditFunc := func(field map[string]interface{}, format string, args ...interface{}) {
+			auditField := make(map[string]interface{})
+			for key, value := range fieldMap {
+				auditField[key] = value
+			}
+			auditField["AuditLog"] = true
+			for key, value := range field {
+				auditField[key] = value
+			}
+
+			auditLogger := logger.WithFields(auditField)
+			auditLogger.Infof(format, args...)
+		}
+
+		// 将audit function 对象插入上下文
+		c = context.WithValue(c, constant.AuditLoggerKey, auditFunc)
+
 		ctx.Set(constant.ContextKey, c)
 		// Continue.
 		ctx.Next()
-
 	}
 }

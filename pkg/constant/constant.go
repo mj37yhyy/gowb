@@ -13,11 +13,12 @@ const (
 	X_B3_FLAGS        = "X-B3-FLAGS"
 	X_OT_SPAN_CONTEXT = "X-OT-SPAN-CONTEXT"
 
-	ConfigKey  = "config"
-	RoutersKey = "routers"
-	ContextKey = "context"
-	LoggerKey  = "logger"
-	TraceKey   = "trace"
+	ConfigKey      = "config"
+	RoutersKey     = "routers"
+	ContextKey     = "context"
+	LoggerKey      = "logger"
+	AuditLoggerKey = "auditLogger"
+	TraceKey       = "trace"
 
 	BodyKey           = "body"
 	HeaderKey         = "header"
