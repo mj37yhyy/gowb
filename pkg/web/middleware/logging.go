@@ -148,7 +148,7 @@ func Logger() gin.HandlerFunc {
 					msg = fmt.Sprintf("[%s] User(%s) %s %s at %s.",
 						ctx.ClientIP(), user, params.Operate, params.ObjectType, date)
 				} else {
-					fmt.Sprintf("[%s] User(%s) %s %s(%s) at %s.",
+					msg = fmt.Sprintf("[%s] User(%s) %s %s(%s) at %s.",
 						ctx.ClientIP(), user, params.Operate, params.ObjectType, params.Object, date)
 				}
 				return auditLogger, msg
