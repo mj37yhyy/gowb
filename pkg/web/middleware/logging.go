@@ -143,8 +143,15 @@ func Logger() gin.HandlerFunc {
 			auditLogger := logger.WithFields(auditField)
 
 			if params.IsGenerateMsg {
-				return auditLogger, fmt.Sprintf("[%s] User(%s) %s %s(%s) at %s.",
-					ctx.ClientIP(), user, params.Operate, params.ObjectType, params.Object, date)
+				var msg string
+				if params.Object == "" {
+					msg = fmt.Sprintf("[%s] User(%s) %s %s at %s.",
+						ctx.ClientIP(), user, params.Operate, params.ObjectType, date)
+				} else {
+					fmt.Sprintf("[%s] User(%s) %s %s(%s) at %s.",
+						ctx.ClientIP(), user, params.Operate, params.ObjectType, params.Object, date)
+				}
+				return auditLogger, msg
 			}
 			return auditLogger, ""
 		}
