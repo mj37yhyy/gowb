@@ -171,7 +171,7 @@ func getUser(fields map[string]interface{}) (id string, accountType string) {
 		return userID, "Sub-account"
 	}
 	accountID, ok := fields[constant.AuditAccountKey].(string)
-	if ok && userID != "" {
+	if ok && accountID != "" {
 		return accountID, "Master"
 	}
 	return "", ""
