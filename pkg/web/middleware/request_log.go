@@ -17,7 +17,7 @@ func RequestInLog(c *gin.Context) {
 	var logFields = logger.Fields{
 		"uri":    c.Request.RequestURI,
 		"method": c.Request.Method,
-		"args":   c.Request.PostForm,
+		"args":   c.Request.Form,
 		"body":   string(bodyBytes),
 		"from":   c.ClientIP(),
 	}
@@ -34,7 +34,6 @@ func RequestOutLog(c *gin.Context) {
 	var logFields = logger.Fields{
 		"uri":       c.Request.RequestURI,
 		"method":    c.Request.Method,
-		"args":      c.Request.PostForm,
 		"from":      c.ClientIP(),
 		"response":  response,
 		"proc_time": endExecTime.Sub(startExecTime).Seconds(),
