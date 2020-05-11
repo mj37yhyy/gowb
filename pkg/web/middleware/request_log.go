@@ -21,7 +21,8 @@ func RequestInLog(c *gin.Context) {
 		"body":   string(bodyBytes),
 		"from":   c.ClientIP(),
 	}
-	logger.WithFields(logFields).Info("start")
+	action := c.Request.FormValue("Action")
+	logger.WithFields(logFields).Infof("%s start", action)
 }
 
 // 请求输出日志
@@ -38,7 +39,8 @@ func RequestOutLog(c *gin.Context) {
 		"response":  response,
 		"proc_time": endExecTime.Sub(startExecTime).Seconds(),
 	}
-	logger.WithFields(logFields).Info("end")
+	action := c.Request.FormValue("Action")
+	logger.WithFields(logFields).Infof("%s end", action)
 }
 
 func RequestLog() gin.HandlerFunc {
