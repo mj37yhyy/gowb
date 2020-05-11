@@ -121,6 +121,7 @@ func initGin(c context.Context) (r *gin.Engine) {
 		ctx.Next()
 	})
 	//r.Use(middleware.RequestLogging())
+	r.Use(middleware.RequestLog())
 	r.Use(middleware.Logger())
 	r.Use(ginprom.PromMiddleware(nil))
 	r.Use(middleware.Tracing())
