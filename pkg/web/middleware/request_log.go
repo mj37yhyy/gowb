@@ -13,7 +13,6 @@ func RequestInLog(c *gin.Context) {
 	c.Set("startExecTime", time.Now())
 	bodyBytes, _ := ioutil.ReadAll(c.Request.Body)
 	c.Request.Body = ioutil.NopCloser(bytes.NewBuffer(bodyBytes)) // Write body back
-	//_ = c.Request.ParseForm()
 	action := c.Request.FormValue("Action")
 	var logFields = logger.Fields{
 		"uri":    c.Request.RequestURI,
@@ -28,7 +27,6 @@ func RequestInLog(c *gin.Context) {
 // 请求输出日志
 func RequestOutLog(c *gin.Context) {
 	endExecTime := time.Now()
-	//response, _ := c.Get("response")
 	st, _ := c.Get("startExecTime")
 
 	startExecTime, _ := st.(time.Time)
