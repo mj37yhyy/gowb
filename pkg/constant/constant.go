@@ -19,6 +19,7 @@ const (
 	LoggerKey      = "logger"
 	AuditLoggerKey = "auditLogger"
 	TraceKey       = "trace"
+	MiddlewareKey  = "middleware"
 
 	BodyKey           = "body"
 	HeaderKey         = "header"
@@ -29,6 +30,7 @@ const (
 	ShouldBindKey     = "shouldBind"
 	ShouldBindWithKey = "shouldBindWith"
 	TransactionKey    = "tx"
+	ResponseKey       = "response"
 
 	BindingUri           BindingType = "uri"
 	BindingForm          BindingType = "form"

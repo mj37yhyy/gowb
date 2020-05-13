@@ -121,7 +121,11 @@ func initGin(c context.Context) (r *gin.Engine) {
 		ctx.Next()
 	})
 	//r.Use(middleware.RequestLogging())
-	r.Use(middleware.RequestLog())
+	mw := c.Value(constant.MiddlewareKey).([]gin.HandlerFunc)
+	for _, v := range mw {
+		r.Use(v)
+	}
+	//r.Use(middleware.RequestLog())
 	r.Use(middleware.Logger())
 	r.Use(ginprom.PromMiddleware(nil))
 	r.Use(middleware.Tracing())
@@ -250,7 +254,7 @@ func call(_router Router, ctx *gin.Context) {
 		setContext(ctx, context.WithValue(getContext(ctx), constant.TransactionKey, tx))
 	}
 	resp, hs := _router.Handler(getContext(ctx))
-
+	setContext(ctx, context.WithValue(getContext(ctx), constant.ResponseKey, resp))
 	if tx != nil && _router.OpenFlatTransaction {
 		if hs >= 400 {
 			tx.Rollback()

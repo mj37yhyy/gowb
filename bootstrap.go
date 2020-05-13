@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/gin-gonic/gin"
 	"github.com/mj37yhyy/gowb/pkg/config"
 	"github.com/mj37yhyy/gowb/pkg/db"
 	gowbLog "github.com/mj37yhyy/gowb/pkg/log"
@@ -29,6 +30,7 @@ type Gowb struct {
 	Config           config.Config
 	Routers          []web.Router
 	AutoCreateTables []interface{}
+	middleware       []gin.HandlerFunc
 }
 
 func Bootstrap(g Gowb) (err error) {
@@ -64,7 +66,7 @@ func Bootstrap(g Gowb) (err error) {
 func doBootstrap(g Gowb, config config.Config) error {
 	c := context.WithValue(context.Background(), "routers", g.Routers)
 	c = context.WithValue(c, "config", config)
-
+	c = context.WithValue(c, "middleware", g.middleware)
 	//初始化mysql
 	if config.Mysql.Enabled {
 		err := initMysql(c, g)
