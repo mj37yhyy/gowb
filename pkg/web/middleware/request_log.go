@@ -2,9 +2,7 @@ package middleware
 
 import (
 	"bytes"
-	"encoding/json"
 	"github.com/gin-gonic/gin"
-	"github.com/mj37yhyy/gowb/pkg/model"
 	logger "github.com/sirupsen/logrus"
 	"io/ioutil"
 	"time"
@@ -13,9 +11,10 @@ import (
 // 请求进入日志
 func RequestInLog(c *gin.Context) {
 	c.Set("startExecTime", time.Now())
-
 	bodyBytes, _ := ioutil.ReadAll(c.Request.Body)
 	c.Request.Body = ioutil.NopCloser(bytes.NewBuffer(bodyBytes)) // Write body back
+	//_ = c.Request.ParseForm()
+	action := c.Request.FormValue("Action")
 	var logFields = logger.Fields{
 		"uri":    c.Request.RequestURI,
 		"method": c.Request.Method,
@@ -23,7 +22,6 @@ func RequestInLog(c *gin.Context) {
 		"body":   string(bodyBytes),
 		"from":   c.ClientIP(),
 	}
-	action := c.Request.FormValue("Action")
 	logger.WithFields(logFields).Infof("%s start", action)
 }
 
@@ -35,15 +33,7 @@ func RequestOutLog(c *gin.Context) {
 
 	startExecTime, _ := st.(time.Time)
 
-	var response = model.NewResponse()
-	blw := &bodyLogWriter{
-		body:           bytes.NewBufferString(""),
-		ResponseWriter: c.Writer,
-	}
-	c.Writer = blw
-	if err := json.Unmarshal(blw.body.Bytes(), &response); err != nil {
-		logger.Println(err, "response body can not unmarshal to model.Response struct, body: `%s`", blw.body.Bytes())
-	}
+	response, _ := c.Get("response")
 	var logFields = logger.Fields{
 		"uri":       c.Request.RequestURI,
 		"method":    c.Request.Method,
