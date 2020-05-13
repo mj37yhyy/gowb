@@ -254,7 +254,7 @@ func call(_router Router, ctx *gin.Context) {
 		setContext(ctx, context.WithValue(getContext(ctx), constant.TransactionKey, tx))
 	}
 	resp, hs := _router.Handler(getContext(ctx))
-	setContext(ctx, context.WithValue(getContext(ctx), constant.ResponseKey, resp))
+	ctx.Set(constant.ResponseKey, resp)
 	if tx != nil && _router.OpenFlatTransaction {
 		if hs >= 400 {
 			tx.Rollback()
