@@ -30,7 +30,7 @@ type Gowb struct {
 	Config           config.Config
 	Routers          []web.Router
 	AutoCreateTables []interface{}
-	middleware       []gin.HandlerFunc
+	Middleware       []gin.HandlerFunc
 }
 
 func Bootstrap(g Gowb) (err error) {
@@ -66,7 +66,7 @@ func Bootstrap(g Gowb) (err error) {
 func doBootstrap(g Gowb, config config.Config) error {
 	c := context.WithValue(context.Background(), "routers", g.Routers)
 	c = context.WithValue(c, "config", config)
-	c = context.WithValue(c, "middleware", g.middleware)
+	c = context.WithValue(c, "middleware", g.Middleware)
 	//初始化mysql
 	if config.Mysql.Enabled {
 		err := initMysql(c, g)
