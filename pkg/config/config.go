@@ -26,6 +26,7 @@ type Web struct {
 	Port        int      `mapstructure:"port" yaml:"port" json:"port"`
 	RunMode     string   `mapstructure:"runMode" yaml:"runMode" json:"runMode"`
 	LogSkipPath []string `mapstructure:"logSkipPath" yaml:"logSkipPath" json:"logSkipPath"`
+	DisableRequestLogMiddleware bool `mapstructure:"disableRequestLogMiddleware" yaml:"disableRequestLogMiddleware" json:"disableRequestLogMiddleware"`
 }
 
 type Trace struct {

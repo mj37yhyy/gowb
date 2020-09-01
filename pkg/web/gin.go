@@ -125,7 +125,10 @@ func initGin(c context.Context) (r *gin.Engine) {
 	for _, v := range mw {
 		r.Use(v)
 	}
-	r.Use(middleware.RequestLog())
+
+	if !_config.Web.DisableRequestLogMiddleware {
+		r.Use(middleware.RequestLog())
+	}
 	r.Use(middleware.Logger())
 	r.Use(ginprom.PromMiddleware(nil))
 	r.Use(middleware.Tracing())
