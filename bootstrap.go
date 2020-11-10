@@ -29,6 +29,7 @@ type Gowb struct {
 	ConfigType       string
 	Config           config.Config
 	Routers          []web.Router
+	RouterConfigs    []web.RouterConfigs
 	AutoCreateTables []interface{}
 	Middleware       []gin.HandlerFunc
 }
@@ -65,6 +66,7 @@ func Bootstrap(g Gowb) (err error) {
 
 func doBootstrap(g Gowb, config config.Config) error {
 	c := context.WithValue(context.Background(), "routers", g.Routers)
+	c = context.WithValue(c, "router_configs", g.RouterConfigs)
 	c = context.WithValue(c, "config", config)
 	c = context.WithValue(c, "middleware", g.Middleware)
 	//初始化mysql

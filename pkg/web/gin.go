@@ -39,39 +39,52 @@ type Router struct {
 	Director            Director
 }
 
-func Bootstrap(ctx context.Context) {
-	server := start(ctx)
-	_signal()
-	_timeout(ctx, server)
+type RouterConfigs struct {
+	Routers []Router
+	Config  config.Config
 }
 
-func start(c context.Context) *http.Server {
+func Bootstrap(ctx context.Context) {
+	servers := start(ctx)
+	_signal()
+	_timeout(ctx, servers)
+}
+
+func start(c context.Context) []*http.Server {
 	conf := c.Value(constant.ConfigKey).(config.Config)
 	routers := c.Value(constant.RoutersKey).([]Router)
+	routerConfigs := c.Value(constant.RouterConfigsKey).([]RouterConfigs)
+	if routers != nil {
+		routerConfigs = append(routerConfigs, RouterConfigs{routers, conf})
+	}
 
 	gin.SetMode(conf.Web.RunMode)
 
-	routersInit := doRouter(c, routers)
+	routersInit := doRouter(c, routerConfigs)
 	readTimeout := time.Minute
 	writeTimeout := time.Minute
-	endPoint := fmt.Sprintf(":%d", conf.Web.Port)
 	maxHeaderBytes := 1 << 20
 
-	server := &http.Server{
-		Addr:           endPoint,
-		Handler:        routersInit,
-		ReadTimeout:    readTimeout,
-		WriteTimeout:   writeTimeout,
-		MaxHeaderBytes: maxHeaderBytes,
-	}
-	go func() {
-		// service connections
-		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			log.Fatalf("listen: %s\n", err)
+	var servers []*http.Server
+	for i, engine := range routersInit {
+		server := &http.Server{
+			Addr:           fmt.Sprintf(":%d", routerConfigs[i].Config.Web.Port),
+			Handler:        engine,
+			ReadTimeout:    readTimeout,
+			WriteTimeout:   writeTimeout,
+			MaxHeaderBytes: maxHeaderBytes,
 		}
-	}()
-	log.Printf("[info] start http server listening %s", endPoint)
-	return server
+		servers = append(servers, server)
+		go func(i int) {
+			log.Printf("[info] start http server listening %s", server.Addr)
+			// service connections
+			if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+				log.Fatalf("listen: %s\n", err)
+			}
+		}(i)
+	}
+
+	return servers
 }
 
 func _signal() {
@@ -86,11 +99,13 @@ func _signal() {
 	log.Println("Shutdown Server ...")
 }
 
-func _timeout(ctx context.Context, server *http.Server) {
+func _timeout(ctx context.Context, servers []*http.Server) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	if err := server.Shutdown(ctx); err != nil {
-		log.Fatal("Server Shutdown:", err)
+	for _, server := range servers {
+		if err := server.Shutdown(ctx); err != nil {
+			log.Fatal("Server Shutdown:", err)
+		}
 	}
 	// catching ctx.Done(). timeout of 5 seconds.
 	select {
@@ -100,48 +115,58 @@ func _timeout(ctx context.Context, server *http.Server) {
 	log.Println("Server exiting")
 }
 
-func doRouter(c context.Context, routers []Router) *gin.Engine {
-	return router(initGin(c), routers)
+func doRouter(c context.Context, routerConfigs []RouterConfigs) []*gin.Engine {
+	return router(initGin(c, routerConfigs), routerConfigs)
 }
 
-func initGin(c context.Context) (r *gin.Engine) {
-	r = gin.New()
+func initGin(c context.Context, configs []RouterConfigs) (rr []*gin.Engine) {
+	var res []*gin.Engine
+	for _, routerConfigs := range configs {
 
-	_config := c.Value(constant.ConfigKey).(config.Config)
+		r := gin.New()
 
-	r.Use(gin.LoggerWithConfig(gin.LoggerConfig{
-		SkipPaths: _config.Web.LogSkipPath,
-	}))
-	r.Use(gin.Recovery())
+		r.Use(gin.LoggerWithConfig(gin.LoggerConfig{
+			SkipPaths: routerConfigs.Config.Web.LogSkipPath,
+		}))
+		r.Use(gin.Recovery())
 
-	r.Use(middleware.NoCache)
-	r.Use(middleware.Options)
-	r.Use(func(ctx *gin.Context) {
-		ctx.Set(constant.ContextKey, c)
-		ctx.Next()
-	})
-	//r.Use(middleware.RequestLogging())
-	mw := c.Value(constant.MiddlewareKey).([]gin.HandlerFunc)
-	for _, v := range mw {
-		r.Use(v)
+		r.Use(middleware.NoCache)
+		r.Use(middleware.Options)
+		r.Use(func(ctx *gin.Context) {
+			ctx.Set(constant.ContextKey, c)
+			ctx.Next()
+		})
+		//r.Use(middleware.RequestLogging())
+		mw := c.Value(constant.MiddlewareKey).([]gin.HandlerFunc)
+		for _, v := range mw {
+			r.Use(v)
+		}
+
+		if !routerConfigs.Config.Web.DisableRequestLogMiddleware {
+			r.Use(middleware.RequestLog())
+		}
+		r.Use(middleware.Logger())
+		r.Use(ginprom.PromMiddleware(nil))
+		r.Use(middleware.Tracing())
+		res = append(res, r)
 	}
-
-	if !_config.Web.DisableRequestLogMiddleware {
-		r.Use(middleware.RequestLog())
-	}
-	r.Use(middleware.Logger())
-	r.Use(ginprom.PromMiddleware(nil))
-	r.Use(middleware.Tracing())
-	return r
+	return res
 }
 
 /**
 路由
 */
-func router(r *gin.Engine, routers []Router) *gin.Engine {
-	baseHandle(r)
-	doHandle(r, routers)
-	return r
+func router(engines []*gin.Engine, routerConfigs []RouterConfigs) []*gin.Engine {
+	for i, routers := range routerConfigs {
+		for j, engine := range engines {
+			if i == j {
+				baseHandle(engine)
+				doHandle(engine, routers)
+			}
+		}
+	}
+
+	return engines
 }
 
 /*
@@ -168,8 +193,8 @@ func baseHandle(r *gin.Engine) {
 /**
 用户函数处理
 */
-func doHandle(r *gin.Engine, routers []Router) {
-	for _, router := range routers {
+func doHandle(r *gin.Engine, routerConfigs RouterConfigs) {
+	for _, router := range routerConfigs.Routers {
 		ch := make(chan int)
 		go func(_router Router) {
 			r.Handle(_router.Method, _router.Path, func(ctx *gin.Context) {

@@ -21,6 +21,8 @@ const (
 	TraceKey       = "trace"
 	MiddlewareKey  = "middleware"
 
+	RouterConfigsKey = "router_configs"
+
 	BodyKey           = "body"
 	HeaderKey         = "header"
 	ParamsKey         = "params"
